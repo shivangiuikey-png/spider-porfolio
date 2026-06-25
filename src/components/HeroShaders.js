@@ -38,13 +38,21 @@ void main() {
   vec2 centeredUv = vUv - vec2(0.5);
   vec2 uvCover = centeredUv * ratio + vec2(0.5);
 
-  // Get the base colors from both textures using the correctly scaled UVs
+  // --- AAPKI IMAGE KO SHIFT AUR SCALE KARNE KA CODE ---
+  vec2 shiviUv = uvCover;
+  
+  // 1. Zoom/Scale Control: (Chhota/Bada karne ke liye)
+  shiviUv = (shiviUv - vec2(0.5)) * 0.85 + vec2(0.5); 
+  
+  // 2. Position Control: (Face ko left/right aur upar/neeche karne ke liye)
+  shiviUv.x += 0.02; 
+  shiviUv.y += 0.05; 
+  // -----------------------------------------------------
+
+  // Get the base colors from both textures
   vec4 color1 = texture2D(uTexture1, uvCover);
   
-  // Add a slight distortion for the top layer near the mask edge
-  
   // Calculate mask
-  // Correct mouse distance for aspect ratio of the screen so the mask is perfectly circular
   vec2 screenRatio = vec2(uResolution.x / uResolution.y, 1.0);
   if (uResolution.y > uResolution.x) {
     screenRatio = vec2(1.0, uResolution.y / uResolution.x);
@@ -55,15 +63,13 @@ void main() {
 
   float dist = distance(uvMouse, cursor);
   
-  // Add an effect where the mask scales in when uHovered increases (from 0 to 1)
   float currentRadius = uRadius * uHovered;
 
   // The mask (1.0 where top image shows, 0.0 where bottom image shows)
   float mask = 1.0 - smoothstep(currentRadius - uSoftness, currentRadius + uSoftness, dist);
   
-  // Add a small ripple / distortion on the edge of the mask
-  vec2 distortedUv = uvCover + (mask * (1.0 - mask)) * 0.05 * uHovered;
-  vec4 color2 = texture2D(uTexture2, distortedUv);
+  // Add a small ripple / distortion on the edge of the mask using shiviUv
+  vec4 color2 = texture2D(uTexture2, shiviUv + (mask * (1.0 - mask)) * 0.05 * uHovered);
 
   // Mix between color1 and color2 based on the mask
   vec4 finalColor = mix(color1, color2, mask);
